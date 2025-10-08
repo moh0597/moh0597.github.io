@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سعر الصرف لحظة بلحظة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1c36; --card:#132547; --accent:#60b6ff; --gold:#ffd57a; --silver:#cfd8e3; --fuel:#ffb07a;
+  --btn-h:50px; --radius:12px; --glass: rgba(255,255,255,0.05);
+}
+body{margin:0;font-family:'Cairo',sans-serif;background:var(--bg);color:white;}
+a{text-decoration:none;color:inherit;}
+.container{max-width:1000px;margin:0 auto;padding:14px;}
+header{margin-bottom:18px;text-align:center;}
+header h1{margin:0;font-size:24px;color:var(--accent);}
+header p{margin:4px 0 0;font-size:14px;color:#a0b8d6;}
+.hero{text-align:center;}
+.usd-card{
+  background: linear-gradient(135deg, #ffda7a, #ffc851);
+  border-radius:20px;
+  padding:30px 20px;
+  margin:20px auto;
+  max-width:400px;
+  text-align:center;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+.usd-text{
+  font-size:20px;
+  font-weight:700;
+  color:#071226;
+  margin-bottom:10px;
+}
+.usd-sub{
+  font-weight:700;
+  margin-top:6px;
+}
+.usd-price{
+  font-size:24px;
+  font-weight:700;
+  color:#071226;
+}
+.city-select{
+  width:120px; /* تم تصغير العرض */
+  margin:10px 0;
+  padding:6px 10px;
+  border-radius:10px;
+  border:none;
+  font-weight:700;
+}
+.actions{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:20px;
+}
+.btn-main{
+  width:100%;
+  padding:15px 0;
+  border-radius:15px;
+  font-size:18px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:0.2s;
+  border:none;
+}
+.btn-main:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
+}
+.btn-gold{background:#ffd57a;color:#071226;}
+.btn-silver{background:#cfd8e3;color:#071226;}
+.btn-curr{background:#60b6ff;color:#071226;}
+.btn-fuel{background:#ffb07a;color:#071226;}
+.btn-calc{background:#ff7f50;color:#071226;}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin:12px 0;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+.card h3{margin:0 0 8px 0;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:10px;text-align:right;border-bottom:1px solid rgba(255,255,255,0.1);}
+th{color:#a0b8d6;}
+td{font-weight:600;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:flex-start;justify-content:center;padding:20px;overflow:auto;z-index:1000;}
+.overlay.show{display:flex;}
+.sheet{background:var(--card);border-radius:var(--radius);padding:18px;max-width:900px;width:100%;}
+.sheet .sheet-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.sheet .sheet-header h2{margin:0;}
+.sheet .ad{background:var(--glass);padding:10px;margin:10px 0;text-align:center;border-radius:var(--radius);font-weight:700;color:var(--accent);}
+.fb-btn{display:inline-block;margin-top:12px;padding:10px 14px;background:#1877f2;color:white;border-radius:var(--radius);font-weight:700;}
+.toast{position:fixed;bottom:20px;left:20px;background:var(--card);padding:10px 14px;border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,0.7);display:none;z-index:1200;}
+input, select{padding:8px 10px;margin:4px 0;border-radius:8px;border:none;width:100%;box-sizing:border-box;}
+.calc-result{margin-top:10px;font-weight:700;color:#60b6ff;}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>سعر الصرف لحظة بلحظة</h1>
+    <p>تابع أسعار الدولار والذهب والفضة والعملات والمحروقات</p>
+  </header>
+
+  <div class="card" style="text-align:center;color:#a0b8d6;font-weight:700;">إعلان أعلى الصفحة — مساحة للإعلانات</div>
+
+  <section class="hero">
+    <div class="usd-card">
+      <div class="usd-text">سعر الدولار مقابل الليرة السورية</div>
+      <select id="city" class="city-select">
+        <option value="دمشق">دمشق</option>
+        <option value="حلب">حلب</option>
+        <option value="الحسكة">الحسكة</option>
+        <option value="إدلب">إدلب</option>
+      </select>
+      <div class="usd-sub">🟢 شراء:</div>
+      <div class="usd-price" id="buy">1$ = 11111 ل.س</div>
+      <div class="usd-sub">🔴 مبيع:</div>
+      <div class="usd-price" id="sell">1$ = 11475 ل.س</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-main btn-gold" data-type="gold">💰 أسعار الذهب</button>
+      <button class="btn-main btn-silver" data-type="silver">🥈 أسعار الفضة</button>
+      <button class="btn-main btn-curr" data-type="curr">💱 أسعار العملات</button>
+      <button class="btn-main btn-fuel" data-type="fuel">⛽️ أسعار المحروقات</button>
+      <button class="btn-main btn-calc" data-type="calc">🧮 حاسبة العملات</button>
+    </div>
+  </section>
+
+  <div class="card" style="text-align:center;color:#a0b8d6;font-weight:700;">إعلان أسفل الصفحة — مساحة للإعلانات</div>
+
+  <a href="https://www.facebook.com/share/1CRdYRPmeU/" target="_blank" class="fb-btn">📘 تواصل معنا للإعلان</a>
+</div>
+
+<!-- Overlays لكل زر -->
+<div id="overlay-gold" class="overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>أسعار الذهب</h2>
+      <button onclick="closeOverlay('gold')">✕</button>
+    </div>
+    <div class="ad">إعلان خاص بالذهب</div>
+    <table>
+      <thead><tr><th>العيار</th><th>السعر (ل.س)</th><th>السعر (USD)</th></tr></thead>
+      <tbody>
+        <tr><td>24 قيراط</td><td>1,666,422.50</td><td>129.20</td></tr>
+        <tr><td>22 قيراط</td><td>1,527,553.95</td><td>118.44</td></tr>
+        <tr><td>21 قيراط</td><td>1,458,119.68</td><td>113.05</td></tr>
+        <tr><td>18 قيراط</td><td>1,249,816.87</td><td>96.90</td></tr>
+        <tr><td>14 قيراط</td><td>972,079.79</td><td>75.37</td></tr>
+        <tr><td>أونصة الذهب</td><td>51,831,533.34</td><td>4,018.63</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="overlay-silver" class="overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>أسعار الفضة</h2>
+      <button onclick="closeOverlay('silver')">✕</button>
+    </div>
+    <div class="ad">إعلان خاص بالفضة</div>
+    <table>
+      <thead><tr><th>العيار</th><th>السعر (ل.س)</th><th>السعر (USD)</th></tr></thead>
+      <tbody>
+        <tr><td>أونصة الفضة</td><td>379,200.48</td><td>29.148</td></tr>
+        <tr><td>الفضة النقية جرام الفضة عيار 999</td><td>12,644.79</td><td>0.94</td></tr>
+        <tr><td>الفضة البريطانية جرام الفضة عيار 958</td><td>12,134.67</td><td>0.90</td></tr>
+        <tr><td>الفضة الاسترليني جرام الفضة عيار 925</td><td>11,754.41</td><td>0.87</td></tr>
+        <tr><td>فضة العملات جرام الفضة عيار 900</td><td>11,341.62</td><td>0.84</td></tr>
+        <tr><td>فضة المجوهرات جرام الفضة عيار 800</td><td>10,246.55</td><td>0.75</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="overlay-curr" class="overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>أسعار العملات مقابل الليرة السورية</h2>
+      <button onclick="closeOverlay('curr')">✕</button>
+    </div>
+    <div class="ad">إعلان خاص بالعملات</div>
+    <table>
+      <thead><tr><th>العملة</th><th>سعر الشراء</th><th>سعر المبيع</th></tr></thead>
+      <tbody>
+        <tr><td>دولار أمريكي (USD)</td><td>11500</td><td>11550</td></tr>
+        <tr><td>كرون نرويجي(NOK)</td><td>1150</td><td>1158</td></tr>
+        <tr><td>ريال عماني(OMR)</td><td>29842</td><td>29992</td></tr>
+        <tr><td>كرون سويدي (SEK)</td><td>1219</td><td>1228</td></tr>
+        <tr><td>دينار بحريني (BHD)</td><td>30486</td><td>30638</td></tr>
+        <tr><td>ريال قطري (QAR)</td><td>3155</td><td>3172</td></tr>
+        <tr><td>دينار كويتي (KWD)</td><td>37437</td><td>37625</td></tr>
+        <tr><td>دينار أردني (JOD)</td><td>16221</td><td>16300</td></tr>
+        <tr><td>دينار ليبي (LYD)</td><td>2116</td><td>2130</td></tr>
+        <tr><td>جنيه مصري (EGP)</td><td>240</td><td>243</td></tr>
+        <tr><td>جنيه إسترليني (GBP)</td><td>15428</td><td>15505</td></tr>
+        <tr><td>ليرة تركية (TRY)</td><td>274</td><td>277</td></tr>
+        <tr><td>ريال سعودي (SAR)</td><td>3063</td><td>3079</td></tr>
+        <tr><td>درهم إماراتي (AED)</td><td>3128</td><td>3144</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="overlay-fuel" class="overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>أسعار المحروقات</h2>
+      <button onclick="closeOverlay('fuel')">✕</button>
+    </div>
+    <div class="ad">إعلان خاص بالمحروقات</div>
+    <table>
+      <thead><tr><th>نوع المحروقات</th><th>السعر (ل.س)</th></tr></thead>
+      <tbody>
+        <tr><td>ليتر بنزين أوكتان 95</td><td>12,000</td></tr>
+        <tr><td>ليتر بنزين أوكتان 90</td><td>10,400</td></tr>
+        <tr><td>ليتر المازوت الحر</td><td>10,695</td></tr>
+        <tr><td>ليتر كاز</td><td>15,000</td></tr>
+        <tr><td>أسطوانة الغاز المنزلي</td><td>121,450</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- overlay الحاسبة -->
+<div id="overlay-calc" class="overlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <h2>حاسبة العملات</h2>
+      <button onclick="closeOverlay('calc')">✕</button>
+    </div>
+    <div class="ad">إعلان قصير هنا</div>
+    <label>اختر العملة:</label>
+    <select id="calc-currency">
+      <option value="USD" selected>دولار أمريكي</option>
+      <option value="EUR">يورو</option>
+      <option value="GBP">جنيه إسترليني</option>
+      <option value="TRY">ليرة تركية</option>
+      <option value="SAR">ريال سعودي</option>
+    </select>
+    <label>المبلغ:</label>
+    <input type="number" id="calc-amount" placeholder="أدخل المبلغ">
+    <button class="btn-main btn-calc" onclick="calculate()">احسب</button>
+    <div class="calc-result" id="calc-result"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast">تم التحديث</div>
+
+<script>
+const toast = document.getElementById('toast');
+document.querySelectorAll('.btn-main').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const type = btn.getAttribute('data-type');
+    document.getElementById('overlay-'+type).classList.add('show');
+    showToast('تم فتح القسم');
+  });
+});
+
+function closeOverlay(type){
+  document.getElementById('overlay-'+type).classList.remove('show');
+}
+
+function showToast(msg){
+  toast.textContent=msg;
+  toast.style.display='block';
+  setTimeout(()=>toast.style.display='none',3000);
+}
+
+function notify(msg){
+  if('Notification' in window){
+    if(Notification.permission==='granted'){ new Notification(msg); }
+    else if(Notification.permission!=='denied'){
+      Notification.requestPermission().then(p=>{
+        if(p==='granted') new Notification(msg);
+      });
+    }
+  }
+}
+
+window.addEventListener('load',()=>{ notify('تم تحديث سعر الدولار مقابل الليرة'); });
+
+// تصحيح تغيير سعر الدولار حسب المدينة
+const citySelect = document.getElementById('city');
+const buyText = document.getElementById('buy');
+const sellText = document.getElementById('sell');
+
+const rates = {
+  "دمشق": {buy:11111, sell:11475},
+  "حلب": {buy:11425, sell:11475},
+  "الحسكة": {buy:11550, sell:11600},
+  "إدلب": {buy:11425, sell:11475}
+};
+
+citySelect.addEventListener('change', ()=>{
+  const city = citySelect.value;
+  const {buy, sell} = rates[city];
+  buyText.textContent = `1$ = ${buy} ل.س`;
+  sellText.textContent = `1$ = ${sell} ل.س`;
+});
+
+// حاسبة العملات
+function calculate(){
+  const currency = document.getElementById('calc-currency').value;
+  const amount = parseFloat(document.getElementById('calc-amount').value);
+  if(isNaN(amount)){ 
+    document.getElementById('calc-result').textContent = "أدخل مبلغ صحيح";
+    return;
+  }
+  const calcRates = {
+    USD:11550,
+    EUR:12300,
+    GBP:15505,
+    TRY:277,
+    SAR:3079
+  };
+  const result = amount * calcRates[currency];
+  document.getElementById('calc-result').textContent = amount + " " + currency + " = " + result.toLocaleString() + " ل.س";
+}
+
+// تحديث الصفحة كل 30 ثانية
+setTimeout(()=>{ location.reload(); }, 30000);
+</script>
+</body>
+</html>
